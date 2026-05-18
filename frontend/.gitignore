@@ -41,3 +41,7 @@ android/app/build/
 android/.cxx/
 **/.gradle/
 **/build/outputs/
+*.mp4
+*.zip
+*.tar
+*.psd

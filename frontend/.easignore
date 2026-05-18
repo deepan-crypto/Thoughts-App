@@ -23,5 +23,13 @@ coverage/
 dist/
 
 gradle-build.log
-__tests__/
-*.log
+__tests__/node_modules
+.git
+.vscode
+dist
+build
+coverage
+*.log
+android/app/build
+ios/build
+*.log

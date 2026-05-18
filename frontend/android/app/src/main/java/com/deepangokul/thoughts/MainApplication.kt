@@ -1,4 +1,4 @@
-package com.deepangokul.cryptoapp
+package com.deepangokul.thoughts
 
 import android.app.Application
 import android.content.res.Configuration

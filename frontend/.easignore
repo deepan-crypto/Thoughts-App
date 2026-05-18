@@ -1,16 +1,16 @@
-node_modules
-.git
-.expo
+node_modules/
+.git/
+.expo/
 
-android/.gradle
-android/**/.gradle
-**/.gradle
+android/.gradle/
+android/**/.gradle/
+**/.gradle/
 
-android/build
-android/app/build
-**/build
+android/build/
+android/app/build/
+**/build/
 
-ios/build
+ios/build/
 
 *.apk
 *.aab
@@ -19,7 +19,9 @@ ios/build
 npm-debug.log
 yarn-error.log
 
-coverage
-dist
+coverage/
+dist/
 
 gradle-build.log
+__tests__/
+*.log

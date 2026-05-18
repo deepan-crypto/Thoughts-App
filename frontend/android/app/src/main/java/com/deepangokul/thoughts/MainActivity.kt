@@ -1,4 +1,4 @@
-package com.deepangokul.cryptoapp
+package com.deepangokul.thoughts
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -33,3 +33,11 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# android build artifacts (large - exclude from EAS uploads)
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+**/.gradle/
+**/build/outputs/

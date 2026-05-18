@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "Thoughts",
-    "slug": "crypto-app",
+    "slug": "thoughts-app",
     "version": "1.0.0",
     "android": {
-      "package": "com.deepangokul.cryptoapp",
+      "package": "com.deepangokul.thoughts",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -70,7 +70,7 @@
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": false
           }
         }
       ]

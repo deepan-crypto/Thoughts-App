@@ -61,3 +61,73 @@
   line-height: 1.65;
   margin: 0;
 }
+
+/* ── Clickable & Span Styles ───────────────────────────── */
+.features__link-wrapper {
+  color: inherit;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.features__link-wrapper:hover {
+  transform: translateY(-4px);
+}
+
+.features__card--clickable {
+  cursor: pointer;
+  border-color: rgba(7, 242, 223, 0.12);
+  background: rgba(7, 242, 223, 0.02);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.features__card--clickable:hover {
+  border-color: rgba(7, 242, 223, 0.4);
+  background: rgba(7, 242, 223, 0.05);
+  box-shadow: 0 8px 30px rgba(7, 242, 223, 0.08);
+}
+
+.features__card--clickable:hover .features__title {
+  color: #07F2DF;
+}
+
+.features__link-text {
+  display: inline-block;
+  margin-top: 1.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #07F2DF;
+  letter-spacing: 0.04em;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.85;
+}
+
+.features__card--clickable:hover .features__link-text {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* Bento Full Width Grid Card Span */
+.features__card--full-width {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.features__link-wrapper--full-width {
+  grid-column: span 3;
+}
+
+@media (max-width: 900px) {
+  .features__card--full-width,
+  .features__link-wrapper--full-width {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 580px) {
+  .features__card--full-width,
+  .features__link-wrapper--full-width {
+    grid-column: span 1;
+  }
+}

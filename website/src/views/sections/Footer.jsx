@@ -18,6 +18,8 @@ export default function Footer() {
           <span className="footer__dot">·</span>
           <Link to="/terms" className="footer__link">Terms</Link>
           <span className="footer__dot">·</span>
+          <Link to="/delete-account" className="footer__link">Delete Account</Link>
+          <span className="footer__dot">·</span>
           <a href="mailto:thoughtsapp.support@gmail.com" className="footer__link">Contact</a>
         </nav>
 

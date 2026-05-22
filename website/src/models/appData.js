@@ -87,6 +87,15 @@ export const FEATURES = [
     desc: "Report content easily. Our moderation keeps the community clean.",
     span: "col",
   },
+  {
+    id: "delete-account",
+    icon: "🗑️",
+    title: "Data Control & Deletion",
+    desc: "Complete autonomy over your presence. Delete your account and purge all associated polls, votes, and social data instantly whenever you want.",
+    span: "full",
+    link: "/delete-account",
+    linkText: "View account deletion guide",
+  },
 ];
 
 export const STATS = [

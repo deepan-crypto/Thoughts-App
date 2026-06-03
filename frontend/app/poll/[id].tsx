@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -9,8 +9,9 @@ import {
     ActivityIndicator,
     StatusBar,
     Share,
+    BackHandler,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { ArrowLeft, Heart, Share2 } from 'lucide-react-native';
 import API_BASE_URL, { SHARE_BASE_URL } from '@/config/api';
 import { authStorage } from '@/utils/authStorage';
@@ -39,6 +40,7 @@ interface Poll {
 
 export default function PollDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
+    const navigation = useNavigation();
     const [poll, setPoll] = useState<Poll | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,25 @@ export default function PollDetailScreen() {
     const [hasVoted, setHasVoted] = useState(false);
     const [votedOption, setVotedOption] = useState<number | null>(null);
     const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
+
+    // Smart back handler: go to home if there's no navigation history
+    const handleBack = useCallback(() => {
+        if (navigation.canGoBack()) {
+            router.back();
+        } else {
+            // No history (opened via deep link) — go to home
+            router.replace('/(tabs)');
+        }
+    }, [navigation]);
+
+    // Handle Android hardware back button
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            handleBack();
+            return true; // Prevent default (exit app) behavior
+        });
+        return () => backHandler.remove();
+    }, [handleBack]);
 
     useEffect(() => {
         const fetchPoll = async () => {
@@ -176,7 +197,7 @@ export default function PollDetailScreen() {
         return (
             <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error || 'Poll not found'}</Text>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                     <Text style={styles.backButtonText}>Go Back</Text>
                 </TouchableOpacity>
             </View>
@@ -189,7 +210,7 @@ export default function PollDetailScreen() {
 
             {/* Header with back button */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+                <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
                     <ArrowLeft size={24} color="#101720" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Poll</Text>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Linking from 'expo-linking';
 import { authStorage } from '@/utils/authStorage';
 import API_BASE_URL from '@/config/api';
 
@@ -15,6 +16,21 @@ export default function SplashScreen() {
 
   const checkAuth = async () => {
     try {
+      // Check if the app was opened via a deep link
+      // If so, let the _layout.tsx deep link handler manage navigation
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        try {
+          const parsed = new URL(initialUrl);
+          const path = parsed.pathname;
+          if (path.startsWith('/poll/') || path.startsWith('/profile/')) {
+            // Deep link detected — skip splash navigation, _layout.tsx handles it
+            setIsChecking(false);
+            return;
+          }
+        } catch {}
+      }
+
       // Check if onboarding has been completed
       const hasSeenOnboarding = await authStorage.hasCompletedOnboarding();
 

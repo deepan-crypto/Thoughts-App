@@ -28,40 +28,66 @@ export default function RootLayout() {
     OpenSans_600SemiBold,
   });
 
-  // Handle deep link URLs (e.g. https://thoughts.co.in/poll/abc123)
-  const handleDeepLink = (url: string) => {
+  // Parse a deep link URL into a route to navigate to
+  const parseDeepLink = (url: string): { type: 'poll'; id: string } | { type: 'profile'; username: string } | null => {
     try {
       const parsed = new URL(url);
       const path = parsed.pathname; // e.g. "/poll/abc123" or "/profile/username"
 
       if (path.startsWith('/poll/')) {
         const pollId = path.replace('/poll/', '');
-        if (pollId) {
-          router.push(`/poll/${pollId}`);
-        }
+        if (pollId) return { type: 'poll', id: pollId };
       } else if (path.startsWith('/profile/')) {
         const username = path.replace('/profile/', '');
-        if (username) {
-          router.push({ pathname: '/(tabs)/profile/[username]', params: { username } });
-        }
+        if (username) return { type: 'profile', username };
       }
     } catch (error) {
-      console.error('Error handling deep link:', error);
+      console.error('Error parsing deep link:', error);
     }
+    return null;
+  };
+
+  // Navigate to a deep link target (used when app is already open / warm start)
+  const navigateToDeepLink = (route: NonNullable<ReturnType<typeof parseDeepLink>>) => {
+    if (route.type === 'poll') {
+      router.push(`/poll/${route.id}`);
+    } else if (route.type === 'profile') {
+      router.push({ pathname: '/(tabs)/profile/[username]', params: { username: route.username } });
+    }
+  };
+
+  // Navigate to a deep link target on cold start:
+  // First ensure (tabs) is in the stack so back button goes to home instead of exiting
+  const navigateToDeepLinkColdStart = (route: NonNullable<ReturnType<typeof parseDeepLink>>) => {
+    router.replace('/(tabs)');
+    // Small delay to let the tabs screen mount before pushing the target screen
+    setTimeout(() => {
+      if (route.type === 'poll') {
+        router.push(`/poll/${route.id}`);
+      } else if (route.type === 'profile') {
+        router.push({ pathname: '/(tabs)/profile/[username]', params: { username: route.username } });
+      }
+    }, 300);
   };
 
   useEffect(() => {
     // Handle URL that opened the app (cold start)
     Linking.getInitialURL().then((url) => {
       if (url) {
-        // Small delay to ensure navigation is ready
-        setTimeout(() => handleDeepLink(url), 1000);
+        const route = parseDeepLink(url);
+        if (route) {
+          // Wait for navigation to be ready, then navigate with proper back stack
+          setTimeout(() => navigateToDeepLinkColdStart(route), 1000);
+        }
       }
     });
 
     // Handle URLs while app is already open (warm start)
     const subscription = Linking.addEventListener('url', (event) => {
-      handleDeepLink(event.url);
+      const route = parseDeepLink(event.url);
+      if (route) {
+        navigateToDeepLink(route);
+      }
     });
 
     return () => subscription.remove();

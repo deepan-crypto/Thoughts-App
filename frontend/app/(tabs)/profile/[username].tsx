@@ -230,6 +230,75 @@ export default function UserProfileScreen() {
         }
     };
 
+    // Handle like poll
+    const handleLikePoll = async (pollId: string): Promise<{ likes: number; liked: boolean }> => {
+        const token = await authStorage.getToken();
+        if (!token) {
+            Alert.alert('Error', 'Please log in to like polls');
+            throw new Error('Not authenticated');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/polls/${pollId}/like`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            setPolls(prev => prev.map(p =>
+                p.id === pollId ? { ...p, likes: data.likesCount, isLiked: true } : p
+            ));
+            return { likes: data.likesCount, liked: true };
+        } else {
+            // If already liked, try to unlike
+            if (data.message?.includes('already liked')) {
+                const unlikeResponse = await fetch(`${API_BASE_URL}/polls/${pollId}/unlike`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                const unlikeData = await unlikeResponse.json();
+                if (unlikeResponse.ok) {
+                    setPolls(prev => prev.map(p =>
+                        p.id === pollId ? { ...p, likes: unlikeData.likesCount, isLiked: false } : p
+                    ));
+                    return { likes: unlikeData.likesCount, liked: false };
+                }
+            }
+            throw new Error(data.message || 'Failed to like poll');
+        }
+    };
+
+    // Handle vote on poll
+    const handleVotePoll = async (pollId: string, optionIndex: number): Promise<{ options: any[]; hasVoted: boolean }> => {
+        const token = await authStorage.getToken();
+        if (!token) {
+            Alert.alert('Error', 'Please log in to vote');
+            throw new Error('Not authenticated');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/polls/${pollId}/vote`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ optionIndex }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.options) {
+            setPolls(prev => prev.map(p =>
+                p.id === pollId ? { ...p, options: data.options, hasVoted: true } : p
+            ));
+            return { options: data.options, hasVoted: true };
+        } else {
+            Alert.alert('Error', data.message || 'Failed to vote');
+            throw new Error(data.message || 'Failed to vote');
+        }
+    };
+
     // Memoize profile image URL so it doesn't change on follow/unfollow re-renders
     const profileImageUrl = useMemo(() => getProfileImage(user?.profilePicture), [user?.profilePicture]);
 
@@ -379,6 +448,8 @@ export default function UserProfileScreen() {
                                     hasVoted={poll.hasVoted}
                                     isLiked={poll.isLiked}
                                     createdAt={poll.createdAt}
+                                    onLike={handleLikePoll}
+                                    onVote={handleVotePoll}
                                 />
                             </View>
                         ))

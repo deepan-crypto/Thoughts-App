@@ -10,7 +10,7 @@ const FallbackPage = () => {
   const deepLinkPath = location.pathname; // e.g. "/poll/6a09d3f1..."
 
   // Android intent URL — tries to open the app; falls back to Play Store if not installed
-  const PACKAGE_NAME = 'com.deepangokul.cryptoapp';
+  const PACKAGE_NAME = 'com.deepangokul.thoughts';
   const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${PACKAGE_NAME}`;
 
   // Intent URL: uses https scheme so the app receives https://thoughts.co.in/poll/:id

@@ -7,7 +7,7 @@ export const APP_META = {
     "The human brain generates 6,000 to 70,000 thoughts per day. Now, share yours.",
   description:
     "Your brain has 70,000 thoughts a day. Share the ones that matter.",
-  androidUrl: "#download",
+  androidUrl: "/downloads/thoughts-latest.apk", // Updated APK URL after each Play Store release
   iosUrl: "#ios",
 };
 

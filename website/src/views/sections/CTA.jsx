@@ -48,7 +48,7 @@ export default function CTA() {
           {status === "error" && <p className="cta__error-msg">{message}</p>}
 
           <div className="cta__download-row">
-            <a href={APP_META.androidUrl} className="btn btn--gradient btn--lg" id="download-android">
+            <a href={APP_META.androidUrl} className="btn btn--gradient btn--lg" id="download-android" download target="_blank">
               📱 Download for Android
             </a>
             <a href={APP_META.iosUrl} className="btn btn--glass btn--lg" id="download-ios">

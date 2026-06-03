@@ -3,9 +3,10 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.deepangokul.cryptoapp",
+      "package_name": "com.deepangokul.thoughts",
       "sha256_cert_fingerprints": [
-        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C"
+        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C",
+        "DB:13:50:C9:67:2F:E9:FB:BC:53:0C:4E:BC:C9:8E:3E:8C:B9:F2:51:69:19:5A:08:B2:B9:52:B8:92:AC:24:2F"
       ]
     }
   }

@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import API_BASE_URL from '@/config/api';
+import { getProfileImageUrl as getProfileImage } from '@/utils/profileImageUtils';
 
 interface LikedUser {
     id: string;
@@ -53,13 +54,7 @@ export default function PollLikesScreen() {
     }, [id]);
 
     const getProfileImageUrl = (profilePicture: string) => {
-        if (!profilePicture) {
-            return 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200';
-        }
-        if (profilePicture.startsWith('http')) {
-            return `${profilePicture}?t=${Date.now()}`;
-        }
-        return `${API_BASE_URL.replace('/api', '')}${profilePicture}?t=${Date.now()}`;
+        return getProfileImage(profilePicture);
     };
 
     const getTimeAgo = (timestamp: string) => {

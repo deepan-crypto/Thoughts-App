@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Search, X } from 'lucide-react-native';
 import { authStorage } from '@/utils/authStorage';
 import API_BASE_URL from '@/config/api';
+import { getProfileImageUrl as getProfileImage } from '@/utils/profileImageUtils';
 
 interface Following {
     _id: string;
@@ -133,13 +134,7 @@ export default function FollowingScreen() {
     };
 
     const getProfileImageUrl = (profilePicture: string) => {
-        if (!profilePicture) {
-            return 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200';
-        }
-        if (profilePicture.startsWith('http')) {
-            return `${profilePicture}?t=${Date.now()}`;
-        }
-        return `${API_BASE_URL.replace('/api', '')}${profilePicture}?t=${Date.now()}`;
+        return getProfileImage(profilePicture);
     };
 
     const handleUserPress = (username: string) => {

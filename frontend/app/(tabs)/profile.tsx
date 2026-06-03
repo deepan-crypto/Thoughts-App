@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -233,8 +233,8 @@ export default function ProfileScreen() {
     }
   };
 
-  // Get profile image URL (handle relative paths)
-  const getProfileImageUrl = () => getProfileImage(user?.profilePicture);
+  // Get profile image URL (handle relative paths, memoized)
+  const profileImageUrl = useMemo(() => getProfileImage(user?.profilePicture), [user?.profilePicture]);
 
   // Handle delete poll
   const handleDeletePoll = async (pollId: string) => {
@@ -407,6 +407,17 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleUserPress = (targetUser?: { username?: string; name?: string }) => {
+    const username = targetUser?.username || targetUser?.name;
+    if (!username) return;
+    try {
+      router.push({ pathname: '/(tabs)/profile/[username]', params: { username } });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      Alert.alert('Error', 'Unable to view profile. Please try again.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -433,7 +444,7 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.profileTopRow}>
             <Image
-              source={{ uri: getProfileImageUrl() }}
+              source={{ uri: profileImageUrl }}
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
@@ -489,23 +500,36 @@ export default function ProfileScreen() {
                   <Text style={styles.votedLabelTop}>You voted</Text>
                 )}
 
-                {/* Poll Header with User Info */}
+                 {/* Poll Header with User Info */}
                 <View style={styles.pollHeader}>
-                  <View style={styles.pollUserInfo}>
-                    <Image
-                      source={{
-                        uri: poll.isOwn
-                          ? getProfileImageUrl()
-                          : getProfileImage(poll.user?.avatar)
-                      }}
-                      style={styles.smallAvatar}
-                    />
-                    <View style={styles.pollTextInfo}>
-                      <Text style={styles.pollUserName}>
-                        {poll.isOwn ? (user?.fullName || 'User') : (poll.user?.fullName || poll.user?.name || 'User')}
-                      </Text>
+                  {poll.isOwn ? (
+                    <View style={styles.pollUserInfo}>
+                      <Image
+                        source={{ uri: profileImageUrl }}
+                        style={styles.smallAvatar}
+                      />
+                      <View style={styles.pollTextInfo}>
+                        <Text style={styles.pollUserName}>
+                          {user?.fullName || 'User'}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.pollUserInfo}
+                      onPress={() => handleUserPress(poll.user)}
+                    >
+                      <Image
+                        source={{ uri: getProfileImage(poll.user?.avatar) }}
+                        style={styles.smallAvatar}
+                      />
+                      <View style={styles.pollTextInfo}>
+                        <Text style={styles.pollUserName}>
+                          {poll.user?.fullName || poll.user?.name || 'User'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
                   <Text style={styles.pollTime}>{formatTimeAgo(poll.createdAt)}</Text>
                 </View>
                 <Text style={styles.pollQuestion}>{poll.question}</Text>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -16,6 +16,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import API_BASE_URL from '@/config/api';
 import { authStorage } from '@/utils/authStorage';
 import PollCard from '@/components/PollCard';
+import { getProfileImageUrl as getProfileImage } from '@/utils/profileImageUtils';
 
 interface UserProfile {
     id: string;
@@ -229,15 +230,8 @@ export default function UserProfileScreen() {
         }
     };
 
-    const getProfileImageUrl = () => {
-        if (!user?.profilePicture) {
-            return 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200';
-        }
-        if (user.profilePicture.startsWith('http')) {
-            return `${user.profilePicture}?t=${Date.now()}`;
-        }
-        return `${API_BASE_URL.replace('/api', '')}${user.profilePicture}?t=${Date.now()}`;
-    };
+    // Memoize profile image URL so it doesn't change on follow/unfollow re-renders
+    const profileImageUrl = useMemo(() => getProfileImage(user?.profilePicture), [user?.profilePicture]);
 
     const isOwnProfile = currentUserId && user?.id === currentUserId;
 
@@ -326,7 +320,7 @@ export default function UserProfileScreen() {
                 {/* Profile Info */}
                 <View style={styles.profileSection}>
                     <Image
-                        source={{ uri: getProfileImageUrl() }}
+                        source={{ uri: profileImageUrl }}
                         style={styles.profileImage}
                     />
                     <View style={styles.nameRow}>

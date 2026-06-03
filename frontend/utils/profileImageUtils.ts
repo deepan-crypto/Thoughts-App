@@ -1,9 +1,13 @@
 import API_BASE_URL from '@/config/api';
 
+// Stable session-level timestamp — same for the entire app session,
+// busts cache across restarts but NOT on every re-render.
+const SESSION_TIMESTAMP = Date.now();
+
 /**
  * Get the full URL for a profile image with cache-busting
  * @param profilePicture - The profile picture URL/path from the backend
- * @returns Full URL to the profile image with timestamp for cache-busting
+ * @returns Full URL to the profile image with a session-stable timestamp
  */
 export const getProfileImageUrl = (profilePicture?: string | null): string => {
     // Default fallback image
@@ -23,8 +27,8 @@ export const getProfileImageUrl = (profilePicture?: string | null): string => {
         fullUrl = `${baseUrl}${profilePicture}`;
     }
 
-    // Add cache-busting timestamp to force refresh
+    // Add session-stable cache-busting timestamp (doesn't change on re-renders)
     const separator = fullUrl.includes('?') ? '&' : '?';
-    return `${fullUrl}${separator}t=${Date.now()}`;
+    return `${fullUrl}${separator}t=${SESSION_TIMESTAMP}`;
 };
 

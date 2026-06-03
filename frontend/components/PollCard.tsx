@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, Share, Modal, TextInput } from 'react-native';
 import { Heart, Trash2, MoreVertical, Flag, X } from 'lucide-react-native';
 import SendIcon from './SendIcon';
 import { router } from 'expo-router';
 import API_BASE_URL, { SHARE_BASE_URL } from '@/config/api';
+import { getProfileImageUrl as getProfileImage } from '@/utils/profileImageUtils';
 
 interface PollOption {
   id: string | number;
@@ -81,16 +82,8 @@ export default function PollCard({
     setIsLiked(initialIsLiked);
   }, [initialOptions, initialHasVoted, initialLikes, initialIsLiked]);
 
-  const getProfileImageUrl = (avatar: string) => {
-    if (!avatar) {
-      return 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200';
-    }
-    if (avatar.startsWith('http')) {
-      const separator = avatar.includes('?') ? '&' : '?';
-      return `${avatar}${separator}t=${Date.now()}`;
-    }
-    return `${API_BASE_URL.replace('/api', '')}${avatar}?t=${Date.now()}`;
-  };
+  // Memoize avatar URL so it doesn't change on re-renders (vote, like, etc.)
+  const avatarUrl = useMemo(() => getProfileImage(user.avatar), [user.avatar]);
 
   const handleVote = async (optionIndex: number) => {
     // Prevent voting if user has already voted
@@ -225,7 +218,9 @@ export default function PollCard({
     <View style={styles.card}>
       {/* Header with user info */}
       <View style={styles.header}>
-        <Image source={{ uri: getProfileImageUrl(user.avatar) }} style={styles.avatar} />
+        <TouchableOpacity onPress={handleUserPress} disabled={!user.username}>
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        </TouchableOpacity>
         <View style={styles.userInfo}>
           <View style={styles.userHeader}>
             <TouchableOpacity onPress={handleUserPress} disabled={!user.username}>

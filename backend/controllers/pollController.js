@@ -213,7 +213,8 @@ const getUserPolls = async (req, res, next) => {
             return {
                 id: poll._id,
                 user: {
-                    name: poll.userId.username,
+                    name: poll.userId.fullName || poll.userId.username,
+                    username: poll.userId.username,
                     avatar: getFullImageUrl(poll.userId.profilePicture),
                 },
                 question: poll.question,
@@ -306,8 +307,8 @@ const getUserVotedPolls = async (req, res, next) => {
                 id: poll._id,
                 userId: poll.userId._id,
                 user: {
-                    name: poll.userId.username,
-                    fullName: poll.userId.fullName,
+                    name: poll.userId.fullName || poll.userId.username,
+                    username: poll.userId.username,
                     avatar: getFullImageUrl(poll.userId.profilePicture),
                 },
                 question: poll.question,

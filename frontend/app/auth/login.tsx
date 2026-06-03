@@ -32,7 +32,7 @@ export default function LoginScreen() {
     const newErrors: { [key: string]: string } = {};
 
     if (!username.trim()) {
-      newErrors.username = 'Username is required';
+      newErrors.username = 'Username or email is required';
     }
 
     if (!password.trim()) {
@@ -146,12 +146,12 @@ export default function LoginScreen() {
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Username</Text>
+                <Text style={styles.label}>Username or Email</Text>
                 <TextInput
                   style={[styles.input, errors.username && styles.inputError]}
                   value={username}
                   onChangeText={setUsername}
-                  placeholder="LOISBECKET"
+                  placeholder="loisbecket or email@example.com"
                   placeholderTextColor="#999"
                   autoCapitalize="none"
                 />

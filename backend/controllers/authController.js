@@ -106,21 +106,28 @@ const login = async (req, res, next) => {
         // Validate fields
         if (!username || !password) {
             res.status(400);
-            throw new Error('Please provide username and password');
+            throw new Error('Please provide username or email and password');
         }
 
         // Validate minimum lengths
         if (username.trim().length === 0 || password.trim().length === 0) {
             res.status(400);
-            throw new Error('Username and password cannot be empty');
+            throw new Error('Username/email and password cannot be empty');
         }
 
-        // Find user and include password
-        const user = await User.findOne({ username }).select('+password');
+        const loginIdentifier = username.trim();
+
+        // Find user by username or email and include password
+        const user = await User.findOne({
+            $or: [
+                { username: loginIdentifier },
+                { email: loginIdentifier.toLowerCase() }
+            ]
+        }).select('+password');
 
         if (!user) {
             res.status(401);
-            throw new Error('No account found with this username. Please check your username or sign up.');
+            throw new Error('No account found with this username or email. Please check your credentials or sign up.');
         }
 
         // Check password

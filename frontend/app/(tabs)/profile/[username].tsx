@@ -10,10 +10,12 @@ import {
     StatusBar,
     Alert,
     FlatList,
+    Share,
+    Clipboard,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
-import API_BASE_URL from '@/config/api';
+import { ArrowLeft, Share2 } from 'lucide-react-native';
+import API_BASE_URL, { SHARE_BASE_URL } from '@/config/api';
 import { authStorage } from '@/utils/authStorage';
 import PollCard from '@/components/PollCard';
 import { getProfileImageUrl as getProfileImage } from '@/utils/profileImageUtils';
@@ -304,6 +306,27 @@ export default function UserProfileScreen() {
 
     const isOwnProfile = currentUserId && user?.id === currentUserId;
 
+    const handleShareProfile = async () => {
+        try {
+            const profileUrl = `${SHARE_BASE_URL}/profile/${user?.username || 'user'}`;
+            const shareMessage = `Check out ${user?.fullName || 'this user'}'s profile on Thoughts!\n\n${profileUrl}`;
+            await Share.share({
+                message: shareMessage,
+                url: profileUrl,
+                title: 'Share Profile',
+            });
+        } catch (error: any) {
+            // Fallback: copy to clipboard if Share fails
+            try {
+                const profileUrl = `${SHARE_BASE_URL}/profile/${user?.username || 'user'}`;
+                Clipboard.setString(profileUrl);
+                Alert.alert('Copied!', 'Profile link copied to clipboard.');
+            } catch {
+                Alert.alert('Error', 'Unable to share profile');
+            }
+        }
+    };
+
     const renderFollowButton = () => {
         if (isOwnProfile) {
             return null; // Don't show follow button on own profile
@@ -415,8 +438,14 @@ export default function UserProfileScreen() {
                         </View>
                     </View>
 
-                    {/* Follow Button */}
-                    {renderFollowButton()}
+                    {/* Follow & Share Buttons */}
+                    <View style={styles.actionButtonsRow}>
+                        {renderFollowButton()}
+                        <TouchableOpacity style={styles.shareProfileButton} onPress={handleShareProfile}>
+                            <Share2 size={16} color="#458FD0" />
+                            <Text style={styles.shareProfileButtonText}>Share</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Polls Section */}
@@ -573,13 +602,18 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 4,
     },
+    actionButtonsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginTop: 24,
+    },
     followButton: {
         backgroundColor: '#458FD0',
-        paddingHorizontal: 40,
+        paddingHorizontal: 32,
         paddingVertical: 12,
         borderRadius: 8,
-        marginTop: 24,
-        minWidth: 120,
+        flex: 1,
         alignItems: 'center',
     },
     followButtonText: {
@@ -591,11 +625,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         borderWidth: 1,
         borderColor: '#458FD0',
-        paddingHorizontal: 40,
+        paddingHorizontal: 32,
         paddingVertical: 12,
         borderRadius: 8,
-        marginTop: 24,
-        minWidth: 120,
+        flex: 1,
         alignItems: 'center',
     },
     followingButtonText: {
@@ -605,15 +638,30 @@ const styles = StyleSheet.create({
     },
     requestedButton: {
         backgroundColor: '#E0E0E0',
-        paddingHorizontal: 40,
+        paddingHorizontal: 32,
         paddingVertical: 12,
         borderRadius: 8,
-        marginTop: 24,
-        minWidth: 120,
+        flex: 1,
         alignItems: 'center',
     },
     requestedButtonText: {
         color: '#6C7278',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    shareProfileButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        borderWidth: 1,
+        borderColor: '#458FD0',
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+    },
+    shareProfileButtonText: {
+        color: '#458FD0',
         fontSize: 16,
         fontWeight: '600',
     },

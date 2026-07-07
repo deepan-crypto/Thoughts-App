@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "d2da562b-5985-4c45-8279-bd0c34c85ffe"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.deepangokul.pollingappbackend",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

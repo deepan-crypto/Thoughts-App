@@ -226,7 +226,7 @@ export default function SearchScreen() {
             {/* Logo Header */}
             <View style={styles.logoHeader}>
                 <Image
-                    source={require('../../assets/images/ican.png')}
+                    source={require('../../assets/images/app-icon.png')}
                     style={styles.logo}
                     resizeMode="contain"
                 />

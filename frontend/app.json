@@ -36,18 +36,20 @@
       ]
     },
     "orientation": "portrait",
-    "icon": "./assets/images/ican.png",
+    "icon": "./assets/images/app-icon.png",
     "scheme": "thoughts",
     "splash": {
-      "image": "./assets/images/ican.png",
+      "image": "./assets/images/app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/app-icon.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.skarthiek.thoughtsapp"
+      "bundleIdentifier": "com.deepangokul.cryptoapp",
+      "buildNumber": "2"
     },
     "web": {
       "bundler": "metro",
@@ -62,7 +64,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/ican.png",
+          "icon": "./assets/images/app-icon.png",
           "color": "#458FD0"
         }
       ],

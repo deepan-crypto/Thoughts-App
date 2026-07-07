@@ -4,7 +4,7 @@ async function padImage() {
   try {
     // Read the original image
     console.log('Reading image...');
-    const image = await Jimp.read('./assets/images/ican.png');
+    const image = await Jimp.read('./assets/images/app-icon.png');
     
     // Android adaptive icons use a 108dp canvas with a 72dp visible area.
     // The ratio is 108/72 = 1.5, so the logo should occupy ~67% of the canvas.

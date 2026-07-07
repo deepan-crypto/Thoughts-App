@@ -426,7 +426,7 @@ export default function ProfileScreen() {
       <View style={styles.logoHeader}>
         <View style={styles.headerSpacer} />
         <Image
-          source={require('../../assets/images/ican.png')}
+          source={require('../../assets/images/app-icon.png')}
           style={styles.logo}
           resizeMode="contain"
         />

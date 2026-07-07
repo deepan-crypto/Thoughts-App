@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const path = require('path');
 
 const connectDB = async () => {
     const uri = process.env.MONGODB_URI;
@@ -9,19 +8,14 @@ const connectDB = async () => {
         process.exit(1);
     }
 
-    // Absolute path to the AWS CA bundle — anchored to this file's directory
-    // so it works regardless of where PM2 / Node starts the process from.
-    const tlsCAFile = path.join(__dirname, '..', 'certs', 'global-bundle.pem');
-
     try {
-        const conn = await mongoose.connect(uri, {
-            tls: true,
-            tlsCAFile,
-        });
+        // Atlas connection — no custom TLS options needed.
+        // The connection string from Atlas already includes the correct settings.
+        const conn = await mongoose.connect(uri);
 
-        console.log(`✅ Connected to Amazon DocumentDB: ${conn.connection.host}`);
+        console.log(`✅ Connected to MongoDB Atlas: ${conn.connection.host}`);
     } catch (error) {
-        console.error('❌ DocumentDB connection error:', error.message);
+        console.error('❌ MongoDB Atlas connection error:', error.message);
         process.exit(1);
     }
 };

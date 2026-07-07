@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Thoughts",
-    "slug": "thoughts-app",
+    "slug": "crypto-app",
     "version": "1.0.0",
     "android": {
       "package": "com.deepangokul.thoughts",
@@ -47,7 +47,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.deepangokul.cryptoapp"
+      "bundleIdentifier": "com.skarthiek.thoughtsapp"
     },
     "web": {
       "bundler": "metro",

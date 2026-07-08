@@ -37,11 +37,26 @@ export default function RootLayout() {
   });
 
   // Parse a deep link URL into a route to navigate to
+  // Handles both:
+  //   https://thoughts.co.in/poll/abc123   (web share link)
+  //   thoughts://poll/abc123               (custom scheme — host="poll", path="/abc123")
   const parseDeepLink = (url: string): { type: 'poll'; id: string } | { type: 'profile'; username: string } | null => {
     try {
       const parsed = new URL(url);
-      const path = parsed.pathname; // e.g. "/poll/abc123" or "/profile/username"
 
+      // Custom scheme: thoughts://poll/abc123
+      //   parsed.host = "poll", parsed.pathname = "/abc123"
+      if (parsed.protocol === 'thoughts:') {
+        const segment = parsed.host; // "poll" or "profile"
+        const id = parsed.pathname.replace(/^\//, ''); // strip leading slash
+        if (segment === 'poll' && id) return { type: 'poll', id };
+        if (segment === 'profile' && id) return { type: 'profile', username: id };
+        return null;
+      }
+
+      // HTTPS web link: https://thoughts.co.in/poll/abc123
+      //   parsed.pathname = "/poll/abc123"
+      const path = parsed.pathname;
       if (path.startsWith('/poll/')) {
         const pollId = path.replace('/poll/', '');
         if (pollId) return { type: 'poll', id: pollId };
@@ -54,6 +69,7 @@ export default function RootLayout() {
     }
     return null;
   };
+
 
   // Navigate to a deep link target (used when app is already open / warm start)
   const navigateToDeepLink = (route: NonNullable<ReturnType<typeof parseDeepLink>>) => {

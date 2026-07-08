@@ -315,7 +315,7 @@ const googleCallback = async (req, res, next) => {
 
         // For mobile app, redirect to a custom URL scheme with the token
         // The frontend will handle this URL and extract the token
-        const redirectUrl = `myapp://auth/callback?token=${token}&userId=${user._id}`;
+        const redirectUrl = `thoughts://auth/callback?token=${token}&userId=${user._id}`;
 
         // Alternatively, return JSON if called from API
         if (req.query.mobile === 'true' || req.body.mobile === 'true') {

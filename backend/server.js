@@ -166,7 +166,7 @@ app.get('/', (req, res) => {
 // When someone clicks a shared poll link, this page opens the poll in the app
 app.get('/poll/:pollId', async (req, res) => {
     const { pollId } = req.params;
-    const deepLink = `myapp://poll/${pollId}`;
+    const deepLink = `thoughts://poll/${pollId}`;
 
     // Try to fetch the poll question for a nicer preview
     let pollQuestion = 'Check out this poll on Thoughts!';
@@ -217,7 +217,7 @@ app.get('/poll/:pollId', async (req, res) => {
 // Deep link redirect for shared profiles
 app.get('/profile/:username', (req, res) => {
     const { username } = req.params;
-    const deepLink = `myapp://profile/${username}`;
+    const deepLink = `thoughts://profile/${username}`;
 
     res.send(`<!DOCTYPE html>
 <html>

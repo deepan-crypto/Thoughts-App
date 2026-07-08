@@ -166,7 +166,8 @@ app.get('/', (req, res) => {
 // When someone clicks a shared poll link, this page opens the poll in the app
 app.get('/poll/:pollId', async (req, res) => {
     const { pollId } = req.params;
-    const deepLink = `thoughts://poll/${pollId}`;
+    const customScheme = `thoughts://poll/${pollId}`;
+    const intentUri = `intent://poll/${pollId}#Intent;scheme=thoughts;package=com.deepangokul.thoughts;end`;
 
     // Try to fetch the poll question for a nicer preview
     let pollQuestion = 'Check out this poll on Thoughts!';
@@ -195,7 +196,7 @@ app.get('/poll/:pollId', async (req, res) => {
         .card { background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
         .logo { font-size: 28px; font-weight: 700; color: #458FD0; margin-bottom: 16px; }
         .question { font-size: 18px; color: #101720; margin-bottom: 24px; line-height: 1.5; }
-        .btn { display: inline-block; background: #458FD0; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 600; }
+        .btn { display: inline-block; background: #458FD0; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 600; cursor: pointer; }
         .sub { margin-top: 16px; font-size: 13px; color: #687684; }
     </style>
 </head>
@@ -203,12 +204,26 @@ app.get('/poll/:pollId', async (req, res) => {
     <div class="card">
         <div class="logo">Thoughts</div>
         <p class="question">${pollQuestion}</p>
-        <a href="${deepLink}" class="btn">Open in App</a>
-        <p class="sub">Opening Thoughts app...</p>
+        <a id="openBtn" class="btn">Open in App</a>
+        <p class="sub">Tap the button to open in Thoughts</p>
     </div>
     <script>
-        // Try to open the app automatically
-        window.location.href = "${deepLink}";
+        var isAndroid = /android/i.test(navigator.userAgent);
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        var btn = document.getElementById('openBtn');
+
+        if (isAndroid) {
+            // Android Intent URI — works inside WhatsApp/Instagram in-app browsers
+            btn.href = "${intentUri}";
+            // Auto-redirect via intent
+            window.location.href = "${intentUri}";
+        } else if (isIOS) {
+            // iOS — use custom scheme
+            btn.href = "${customScheme}";
+            window.location.href = "${customScheme}";
+        } else {
+            btn.href = "${customScheme}";
+        }
     </script>
 </body>
 </html>`);
@@ -217,7 +232,8 @@ app.get('/poll/:pollId', async (req, res) => {
 // Deep link redirect for shared profiles
 app.get('/profile/:username', (req, res) => {
     const { username } = req.params;
-    const deepLink = `thoughts://profile/${username}`;
+    const customScheme = `thoughts://profile/${username}`;
+    const intentUri = `intent://profile/${username}#Intent;scheme=thoughts;package=com.deepangokul.thoughts;end`;
 
     res.send(`<!DOCTYPE html>
 <html>
@@ -234,7 +250,7 @@ app.get('/profile/:username', (req, res) => {
         .card { background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
         .logo { font-size: 28px; font-weight: 700; color: #458FD0; margin-bottom: 16px; }
         .question { font-size: 18px; color: #101720; margin-bottom: 24px; line-height: 1.5; }
-        .btn { display: inline-block; background: #458FD0; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 600; }
+        .btn { display: inline-block; background: #458FD0; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 600; cursor: pointer; }
         .sub { margin-top: 16px; font-size: 13px; color: #687684; }
     </style>
 </head>
@@ -242,11 +258,23 @@ app.get('/profile/:username', (req, res) => {
     <div class="card">
         <div class="logo">Thoughts</div>
         <p class="question">Check out @${username}'s profile</p>
-        <a href="${deepLink}" class="btn">Open in App</a>
-        <p class="sub">Opening Thoughts app...</p>
+        <a id="openBtn" class="btn">Open in App</a>
+        <p class="sub">Tap the button to open in Thoughts</p>
     </div>
     <script>
-        window.location.href = "${deepLink}";
+        var isAndroid = /android/i.test(navigator.userAgent);
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        var btn = document.getElementById('openBtn');
+
+        if (isAndroid) {
+            btn.href = "${intentUri}";
+            window.location.href = "${intentUri}";
+        } else if (isIOS) {
+            btn.href = "${customScheme}";
+            window.location.href = "${customScheme}";
+        } else {
+            btn.href = "${customScheme}";
+        }
     </script>
 </body>
 </html>`);

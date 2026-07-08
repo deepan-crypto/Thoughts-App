@@ -24,7 +24,6 @@ export const createGoogleAuthRequest = () => {
     // Use proxy redirect for Expo Go
     const redirectUri = AuthSession.makeRedirectUri({
         native: 'myapp://auth/callback', // Custom scheme for production
-        useProxy: true, // Use Expo proxy for development
     });
 
     console.log('Google OAuth Redirect URI:', redirectUri);
@@ -58,21 +57,21 @@ export const signInWithGoogle = async () => {
             codeChallengeMethod: AuthSession.CodeChallengeMethod.S256,
         });
 
-        await request.promptAsync(discovery);
+        const result = await request.promptAsync(discovery);
 
-        if (request.state === 'error') {
+        if (result.type === 'error') {
             throw new Error('Google authentication failed');
         }
 
         // Exchange code for token via your backend
-        if (request.type === 'success' && request.params.code) {
+        if (result.type === 'success' && result.params.code) {
             const response = await fetch(`${API_BASE_URL}/auth/google/callback?mobile=true`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    code: request.params.code,
+                    code: result.params.code,
                     redirectUri: config.redirectUri,
                 }),
             });
@@ -91,7 +90,7 @@ export const signInWithGoogle = async () => {
         }
 
         return { success: false, error: 'Authentication cancelled' };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Google Sign-In Error:', error);
         return {
             success: false,
@@ -108,7 +107,6 @@ export const signInWithGoogleBackend = async () => {
     try {
         const redirectUri = AuthSession.makeRedirectUri({
             native: 'myapp://auth/callback',
-            useProxy: false,
         });
 
         const authUrl = `${API_BASE_URL}/auth/google`;
@@ -140,7 +138,7 @@ export const signInWithGoogleBackend = async () => {
         }
 
         return { success: false, error: 'Authentication cancelled or failed' };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Google Backend OAuth Error:', error);
         return {
             success: false,

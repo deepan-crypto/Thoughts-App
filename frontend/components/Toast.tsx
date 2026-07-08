@@ -59,7 +59,7 @@ export const Toast: React.FC<ToastProps> = ({
         });
     };
 
-    if (!visible && slideAnim._value === 100) {
+    if (!visible && (slideAnim as any)._value === 100) {
         return null;
     }
 

@@ -40,17 +40,21 @@ export default function RootLayout() {
   // Handles both:
   //   https://thoughts.co.in/poll/abc123   (web share link)
   //   thoughts://poll/abc123               (custom scheme — host="poll", path="/abc123")
-  const parseDeepLink = (url: string): { type: 'poll'; id: string } | { type: 'profile'; username: string } | null => {
+  const parseDeepLink = (url: string): { type: 'poll'; id: string } | { type: 'profile'; username: string } | { type: 'reset-password'; token: string } | null => {
     try {
       const parsed = new URL(url);
 
       // Custom scheme: thoughts://poll/abc123
       //   parsed.host = "poll", parsed.pathname = "/abc123"
       if (parsed.protocol === 'thoughts:') {
-        const segment = parsed.host; // "poll" or "profile"
+        const segment = parsed.host; // "poll", "profile", or "reset-password"
         const id = parsed.pathname.replace(/^\//, ''); // strip leading slash
         if (segment === 'poll' && id) return { type: 'poll', id };
         if (segment === 'profile' && id) return { type: 'profile', username: id };
+        if (segment === 'reset-password') {
+          const token = parsed.searchParams.get('token');
+          if (token) return { type: 'reset-password', token };
+        }
         return null;
       }
 
@@ -63,6 +67,9 @@ export default function RootLayout() {
       } else if (path.startsWith('/profile/')) {
         const username = path.replace('/profile/', '');
         if (username) return { type: 'profile', username };
+      } else if (path.startsWith('/reset-password')) {
+        const token = parsed.searchParams.get('token');
+        if (token) return { type: 'reset-password', token };
       }
     } catch (error) {
       console.error('Error parsing deep link:', error);
@@ -77,12 +84,22 @@ export default function RootLayout() {
       router.push(`/poll/${route.id}`);
     } else if (route.type === 'profile') {
       router.push({ pathname: '/(tabs)/profile/[username]', params: { username: route.username } });
+    } else if (route.type === 'reset-password') {
+      router.push({ pathname: '/auth/reset-password', params: { token: route.token } });
     }
   };
 
   // Navigate to a deep link target on cold start:
   // First ensure (tabs) is in the stack so back button goes to home instead of exiting
   const navigateToDeepLinkColdStart = (route: NonNullable<ReturnType<typeof parseDeepLink>>) => {
+    // For reset-password, navigate directly — no need to mount tabs first
+    if (route.type === 'reset-password') {
+      setTimeout(() => {
+        router.replace({ pathname: '/auth/reset-password', params: { token: route.token } });
+      }, 300);
+      return;
+    }
+
     router.replace('/(tabs)');
     // Small delay to let the tabs screen mount before pushing the target screen
     setTimeout(() => {

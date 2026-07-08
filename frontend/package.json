@@ -13,7 +13,7 @@
     "eas:configure": "eas build:configure",
     "eas:build:android": "eas build -p android --profile production",
     "eas:build:android:preview": "eas build -p android --profile preview",
-    "prebuild": "expo prebuild",
+    "prebuild": "npx expo prebuild",
     "assemble:android": "cd android && ./gradlew assembleRelease",
     "build:apk-local": "npm run prebuild && npm run assemble:android",
     "create-local-properties": "node -e \"const fs=require('fs');const path=require('path');const sdk=process.env.ANDROID_HOME||process.env.HOME+'/Android/Sdk';const dest=path.join('android','local.properties');fs.writeFileSync(dest,'sdk.dir='+sdk);console.log('wrote '+dest+' -> sdk.dir='+sdk)\"",

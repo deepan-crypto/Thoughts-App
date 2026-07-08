@@ -22,8 +22,14 @@ export default function SplashScreen() {
       if (initialUrl) {
         try {
           const parsed = new URL(initialUrl);
+          // Detect custom scheme (thoughts://) — always defer to _layout.tsx
+          if (parsed.protocol === 'thoughts:') {
+            setIsChecking(false);
+            return;
+          }
+          // Detect HTTPS deep link paths
           const path = parsed.pathname;
-          if (path.startsWith('/poll/') || path.startsWith('/profile/')) {
+          if (path.startsWith('/poll/') || path.startsWith('/profile/') || path.startsWith('/reset-password')) {
             // Deep link detected — skip splash navigation, _layout.tsx handles it
             setIsChecking(false);
             return;

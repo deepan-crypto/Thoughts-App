@@ -6,8 +6,9 @@ const FallbackPage = () => {
   const location = useLocation();
   const [appOpened, setAppOpened] = useState(false);
 
-  // Reconstruct the full deep link path (e.g. /poll/abc123 or /profile/username)
-  const deepLinkPath = location.pathname; // e.g. "/poll/6a09d3f1..."
+  // Reconstruct the full deep link path including query params
+  // e.g. /poll/abc123 or /reset-password?token=xyz
+  const deepLinkPath = location.pathname + location.search;
 
   // Android intent URL — tries to open the app; falls back to Play Store if not installed
   const PACKAGE_NAME = 'com.deepangokul.thoughts';

@@ -188,7 +188,11 @@ const sendOtpEmail = async (email, otp, expiryMinutes = 10) => {
 const sendPasswordResetEmail = async (email, resetToken) => {
     const { passwordResetTemplate } = require('./emailTemplates');
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'myapp://auth'}/reset-password?token=${resetToken}`;
+    // Use HTTPS website URL so the link works in all email clients
+    // (custom URI schemes like myapp:// are blocked by most email providers).
+    // The website will attempt to redirect to the app via intent/universal link.
+    const baseUrl = process.env.WEBSITE_URL || 'https://thoughts.co.in';
+    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
     const html = passwordResetTemplate(resetUrl, 1); // 1 hour expiry
     const appName = process.env.APP_NAME || 'Thoughts';
 

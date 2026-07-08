@@ -26,6 +26,11 @@
               "scheme": "https",
               "host": "thoughts.co.in",
               "pathPrefix": "/profile"
+            },
+            {
+              "scheme": "https",
+              "host": "thoughts.co.in",
+              "pathPrefix": "/reset-password"
             }
           ],
           "category": [

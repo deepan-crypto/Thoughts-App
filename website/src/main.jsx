@@ -18,6 +18,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/poll/:id" element={<FallbackPage />} />
         <Route path="/profile/:username" element={<FallbackPage />} />
+        <Route path="/reset-password" element={<FallbackPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

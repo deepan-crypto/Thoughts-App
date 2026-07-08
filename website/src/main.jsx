@@ -7,7 +7,6 @@ import FallbackPage from './views/FallbackPage.jsx'
 import PrivacyPolicy from './views/PrivacyPolicy.jsx'
 import TermsOfUse from './views/TermsOfUse.jsx'
 import DeleteAccount from './views/DeleteAccount.jsx'
-import ResetPasswordPage from './views/ResetPasswordPage.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -19,7 +18,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/poll/:id" element={<FallbackPage />} />
         <Route path="/profile/:username" element={<FallbackPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/reset-password" element={<FallbackPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

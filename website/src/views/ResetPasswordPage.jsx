@@ -228,6 +228,23 @@ const ResetPasswordPage = () => {
             </button>
           </form>
         )}
+
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+            Prefer to reset in the app?
+          </p>
+          <a
+            href={`intent://thoughts.co.in/reset-password?token=${token}#Intent;scheme=https;package=com.deepangokul.thoughts;S.browser_fallback_url=${encodeURIComponent('https://play.google.com/store/apps/details?id=com.deepangokul.thoughts')};end`}
+            style={{
+              color: '#45BFD0',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Open Thoughts App
+          </a>
+        </div>
       </div>
 
       <p style={{

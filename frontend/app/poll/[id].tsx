@@ -4,17 +4,17 @@ import {
     Text,
     StyleSheet,
     ScrollView,
-    Image,
-    TouchableOpacity,
     ActivityIndicator,
     StatusBar,
-    Share,
+    TouchableOpacity,
     BackHandler,
+    Alert,
 } from 'react-native';
 import { useLocalSearchParams, router, useNavigation } from 'expo-router';
-import { ArrowLeft, Heart, Share2 } from 'lucide-react-native';
-import API_BASE_URL, { SHARE_BASE_URL } from '@/config/api';
+import { ArrowLeft } from 'lucide-react-native';
+import API_BASE_URL from '@/config/api';
 import { authStorage } from '@/utils/authStorage';
+import PollCard from '@/components/PollCard';
 
 interface PollOption {
     id: number;
@@ -35,7 +35,9 @@ interface Poll {
     options: PollOption[];
     likes: number;
     hasVoted: boolean;
-    votedOption?: number;
+    isLiked: boolean;
+    votedOptionIndex?: number;
+    createdAt?: string;
 }
 
 export default function PollDetailScreen() {
@@ -44,11 +46,7 @@ export default function PollDetailScreen() {
     const [poll, setPoll] = useState<Poll | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isLiked, setIsLiked] = useState(false);
-    const [likes, setLikes] = useState(0);
-    const [hasVoted, setHasVoted] = useState(false);
-    const [votedOption, setVotedOption] = useState<number | null>(null);
-    const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     // Smart back handler: go to home if there's no navigation history
     const handleBack = useCallback(() => {
@@ -70,9 +68,24 @@ export default function PollDetailScreen() {
     }, [handleBack]);
 
     useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const userStr = await authStorage.getUser();
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    setCurrentUserId(user._id || user.id);
+                }
+            } catch (err) {
+                console.error('Error fetching current user:', err);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    useEffect(() => {
         const fetchPoll = async () => {
             try {
-                console.log('Fetching poll:', id);
+                setLoading(true);
                 const token = await authStorage.getToken();
                 const headers: Record<string, string> = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -81,11 +94,6 @@ export default function PollDetailScreen() {
 
                 if (response.ok && data.poll) {
                     setPoll(data.poll);
-                    setLikes(data.poll.likes);
-                    setHasVoted(data.poll.hasVoted || false);
-                    // Use votedOptionIndex from API (the index in the options array)
-                    setVotedOption(data.poll.votedOptionIndex ?? null);
-                    setPollOptions(data.poll.options || []);
                 } else {
                     setError(data.message || 'Poll not found');
                 }
@@ -102,86 +110,104 @@ export default function PollDetailScreen() {
         }
     }, [id]);
 
-    const getAvatarUrl = () => {
-        if (!poll?.user.avatar) {
-            return 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100';
-        }
-        if (poll.user.avatar.startsWith('http')) {
-            return poll.user.avatar;
-        }
-        return `${API_BASE_URL.replace('/api', '')}${poll.user.avatar}`;
-    };
-
-    const handleLike = async () => {
+    const handleLikePoll = async (pollId: string) => {
         try {
             const token = await authStorage.getToken();
-            if (!token) return;
+            if (!token) throw new Error('Not authenticated');
 
-            const endpoint = isLiked ? 'unlike' : 'like';
-            const method = isLiked ? 'DELETE' : 'POST';
+            const endpoint = poll?.isLiked ? 'unlike' : 'like';
+            const method = poll?.isLiked ? 'DELETE' : 'POST';
 
-            const response = await fetch(`${API_BASE_URL}/polls/${id}/${endpoint}`, {
+            const response = await fetch(`${API_BASE_URL}/polls/${pollId}/${endpoint}`, {
                 method,
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
             if (response.ok) {
                 const data = await response.json();
-                setLikes(data.likesCount);
-                setIsLiked(!isLiked);
+                if (poll) {
+                    setPoll({
+                        ...poll,
+                        likes: data.likesCount,
+                        isLiked: !poll.isLiked
+                    });
+                }
+                return { likes: data.likesCount, liked: !poll?.isLiked };
             }
+            throw new Error('Failed to toggle like');
         } catch (error) {
-            console.error('Error liking poll:', error);
+            console.error('Error toggling like:', error);
+            throw error;
         }
     };
 
-    const handleVote = async (optionId: number) => {
-        if (hasVoted) return; // already voted
+    const handleVotePoll = async (pollId: string, optionIndex: number) => {
         try {
             const token = await authStorage.getToken();
-            if (!token) return;
+            if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_BASE_URL}/polls/${id}/vote`, {
+            const response = await fetch(`${API_BASE_URL}/polls/${pollId}/vote`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ optionIndex: optionId }),
+                body: JSON.stringify({ optionIndex }),
             });
 
             if (response.ok) {
                 const data = await response.json();
-                setHasVoted(true);
-                setVotedOption(optionId);
-                // Update options with new percentages from server
-                if (data.options) {
-                    setPollOptions(data.options);
+                if (poll) {
+                    setPoll({
+                        ...poll,
+                        hasVoted: true,
+                        options: data.options,
+                        votedOptionIndex: optionIndex
+                    });
                 }
+                return { options: data.options, hasVoted: true };
+            } else {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to vote');
             }
         } catch (error) {
             console.error('Error voting:', error);
+            throw error;
         }
     };
 
-    const handleProfilePress = () => {
-        if (poll?.user?.username) {
-            router.push({ pathname: '/(tabs)/profile/[username]', params: { username: poll.user.username } });
-        }
-    };
+    const handleDeletePoll = async (pollId: string) => {
+        Alert.alert(
+            "Delete Poll",
+            "Are you sure you want to delete this poll?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const token = await authStorage.getToken();
+                            if (!token) return;
 
-    const handleShare = async () => {
-        try {
-            const pollUrl = `${SHARE_BASE_URL}/poll/${id}`;
-            const shareMessage = `Check out this poll: "${poll?.question || ''}"\n\nVote now: ${pollUrl}`;
-            await Share.share({
-                message: shareMessage,
-                url: pollUrl,
-                title: 'Share Poll',
-            });
-        } catch (error) {
-            console.error('Error sharing:', error);
-        }
+                            const response = await fetch(`${API_BASE_URL}/polls/${pollId}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                            });
+
+                            if (response.ok) {
+                                handleBack(); // go back on successful delete
+                            } else {
+                                Alert.alert("Error", "Failed to delete poll");
+                            }
+                        } catch (error) {
+                            console.error('Error deleting poll:', error);
+                            Alert.alert("Error", "Failed to delete poll");
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     if (loading) {
@@ -197,8 +223,8 @@ export default function PollDetailScreen() {
         return (
             <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error || 'Poll not found'}</Text>
-                <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                    <Text style={styles.backButtonText}>Go Back</Text>
+                <TouchableOpacity style={styles.errorBackButton} onPress={handleBack}>
+                    <Text style={styles.errorBackButtonText}>Go Back</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -218,67 +244,20 @@ export default function PollDetailScreen() {
             </View>
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Poll Card */}
-                <View style={styles.pollCard}>
-                    {/* User info */}
-                    <TouchableOpacity style={styles.userRow} onPress={handleProfilePress}>
-                        <Image source={{ uri: getAvatarUrl() }} style={styles.avatar} />
-                        <Text style={styles.userName}>{poll.user.name}</Text>
-                    </TouchableOpacity>
-
-                    {/* Question */}
-                    <Text style={styles.question}>{poll.question}</Text>
-
-                    {/* Options */}
-                    <View style={styles.optionsContainer}>
-                        {pollOptions.map((option, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.optionRow}
-                                onPress={() => handleVote(option.id)}
-                                disabled={hasVoted}
-                                activeOpacity={hasVoted ? 1 : 0.7}
-                            >
-                                <View style={[
-                                    styles.option,
-                                    hasVoted && styles.optionVoted,
-                                    hasVoted && votedOption === option.id && styles.optionSelected,
-                                ]}>
-                                    {hasVoted && (
-                                        <View
-                                            style={[
-                                                styles.progressBar,
-                                                { width: `${option.percentage}%` }
-                                            ]}
-                                        />
-                                    )}
-                                    <Text style={styles.optionText}>
-                                        {option.text} {option.emoji || ''}
-                                    </Text>
-                                </View>
-                                {hasVoted && (
-                                    <Text style={styles.percentage}>{option.percentage}%</Text>
-                                )}
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Actions */}
-                    <View style={styles.actionsRow}>
-                        <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-                            <Heart
-                                size={20}
-                                color={isLiked ? "#FF4444" : "#687684"}
-                                fill={isLiked ? "#FF4444" : "transparent"}
-                            />
-                            <Text style={[styles.actionText, isLiked && styles.likedText]}>{likes}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                            <Share2 size={20} color="#687684" />
-                            <Text style={styles.actionText}>Share</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                <PollCard
+                    id={poll.id}
+                    user={poll.user}
+                    question={poll.question}
+                    options={poll.options}
+                    likes={poll.likes}
+                    hasVoted={poll.hasVoted}
+                    isLiked={poll.isLiked}
+                    createdAt={poll.createdAt}
+                    onLike={handleLikePoll}
+                    onVote={handleVotePoll}
+                    onDelete={poll.user._id === currentUserId ? handleDeletePoll : undefined}
+                    isOwnPoll={poll.user._id === currentUserId}
+                />
             </ScrollView>
         </View>
     );
@@ -311,13 +290,13 @@ const styles = StyleSheet.create({
         color: '#666',
         marginBottom: 20,
     },
-    backButton: {
+    errorBackButton: {
         backgroundColor: '#458FD0',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
     },
-    backButtonText: {
+    errorBackButtonText: {
         color: '#FFFFFF',
         fontWeight: '600',
     },
@@ -341,89 +320,5 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
-    },
-    pollCard: {
-        padding: 20,
-    },
-    userRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 12,
-    },
-    userName: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#101720',
-    },
-    question: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#101720',
-        marginBottom: 20,
-    },
-    optionsContainer: {
-        gap: 12,
-    },
-    optionRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    option: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 8,
-        padding: 14,
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    optionVoted: {
-        backgroundColor: '#E8F4FD',
-    },
-    optionSelected: {
-        borderWidth: 2,
-        borderColor: '#458FD0',
-    },
-    progressBar: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        backgroundColor: '#458FD0',
-        opacity: 0.3,
-    },
-    optionText: {
-        fontSize: 16,
-        color: '#101720',
-        zIndex: 1,
-    },
-    percentage: {
-        marginLeft: 12,
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#458FD0',
-        width: 40,
-    },
-    actionsRow: {
-        flexDirection: 'row',
-        marginTop: 20,
-        gap: 20,
-    },
-    actionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    actionText: {
-        fontSize: 14,
-        color: '#687684',
-    },
-    likedText: {
-        color: '#FF4444',
-    },
+    }
 });

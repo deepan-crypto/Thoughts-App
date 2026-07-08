@@ -46,33 +46,30 @@ const sendPushNotification = async (userId, title, body, data = {}) => {
         // Send notifications in chunks
         const chunks = expo.chunkPushNotifications(messages);
         const tickets = [];
+        const invalidTokens = [];
 
         for (const chunk of chunks) {
             try {
                 const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-                tickets.push(...ticketChunk);
-            } catch (error) {
-                console.error('Error sending push notification chunk:', error);
-            }
-        }
+                
+                // Map each ticket back to its corresponding token in THIS chunk
+                for (let i = 0; i < ticketChunk.length; i++) {
+                    const ticket = ticketChunk[i];
+                    const pushToken = chunk[i].to;
 
-        // Handle tickets to remove invalid tokens
-        const invalidTokens = [];
+                    if (ticket.status === 'error') {
+                        console.error(`Error sending to ${pushToken}:`, ticket.message);
 
-        // Map each ticket back to its corresponding token
-        for (let i = 0; i < tickets.length; i++) {
-            const ticket = tickets[i];
-            const pushToken = messages[i]?.to; // Get the token from the message
-
-            if (ticket.status === 'error') {
-                console.error(`Error sending to ${pushToken}:`, ticket.message);
-
-                // If token is invalid, mark it for removal
-                if (ticket.details && ticket.details.error === 'DeviceNotRegistered') {
-                    if (pushToken) {
-                        invalidTokens.push(pushToken);
+                        // If token is invalid, mark it for removal
+                        if (ticket.details && ticket.details.error === 'DeviceNotRegistered') {
+                            if (pushToken) {
+                                invalidTokens.push(pushToken);
+                            }
+                        }
                     }
                 }
+            } catch (error) {
+                console.error('Error sending push notification chunk:', error);
             }
         }
 

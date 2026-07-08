@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "android": {
       "package": "com.deepangokul.thoughts",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

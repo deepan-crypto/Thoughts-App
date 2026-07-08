@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "7445412168",
+    "project_id": "thoughts-b7e3d",
+    "storage_bucket": "thoughts-b7e3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7445412168:android:6be2c1b1a6ec4875b89b7d",
+        "android_client_info": {
+          "package_name": "com.deepangokul.thoughts"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJn9xn8ga99BV1UKMVEpskCM4brk3Wl0g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

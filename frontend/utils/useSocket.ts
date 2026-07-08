@@ -10,6 +10,38 @@ const SOCKET_URL = API_BASE_URL.replace('/api', '');
 let socketInstance: Socket | null = null;
 
 /**
+ * Fetch the current user ID — always prefer a fresh server fetch to avoid stale cached IDs.
+ */
+async function getFreshUserId(): Promise<string | null> {
+    try {
+        const token = await authStorage.getToken();
+        if (!token) return null;
+
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+                const id = data.user.id || data.user._id;
+                if (id) return id.toString();
+            }
+        }
+    } catch {
+        // Fall back to cached user
+    }
+
+    // Fallback: cached user
+    try {
+        const user = await authStorage.getUser();
+        const id = user?.id || user?._id;
+        return id ? id.toString() : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Hook for managing socket connection
  */
 export const useSocket = () => {
@@ -19,9 +51,9 @@ export const useSocket = () => {
     useEffect(() => {
         const initSocket = async () => {
             try {
-                const user = await authStorage.getUser();
+                const userId = await getFreshUserId();
 
-                if (!user?.id) {
+                if (!userId) {
                     console.log('No user logged in, skipping socket connection');
                     return;
                 }
@@ -42,7 +74,7 @@ export const useSocket = () => {
                     setIsConnected(true);
 
                     // Join user's personal room for notifications
-                    socketInstance?.emit('join', user.id);
+                    socketInstance?.emit('join', userId);
                 });
 
                 // Handle disconnection
@@ -56,7 +88,7 @@ export const useSocket = () => {
                     socketInstance.connect();
                 } else {
                     // Already connected, just join room
-                    socketInstance.emit('join', user.id);
+                    socketInstance.emit('join', userId);
                     setIsConnected(true);
                 }
 
@@ -75,7 +107,7 @@ export const useSocket = () => {
     }, []);
 
     return {
-        socket: socketRef.current,
+        socket: socketRef.current ?? socketInstance,
         isConnected,
     };
 };

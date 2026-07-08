@@ -2,30 +2,31 @@ import { useEffect, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { Router } from 'expo-router';
 import { authStorage } from './authStorage';
 import API_BASE_URL from '@/config/api';
 
 // Check if we're running in Expo Go
 const isExpoGo = Constants.appOwnership === 'expo';
 
-// Only configure notification handler if not in Expo Go
-if (!isExpoGo) {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: true,
-            shouldShowBanner: true,
-            shouldShowList: true,
-        }),
-    });
-}
+// Configure notification handler for foreground display
+// (Only meaningful in development builds; harmless in Expo Go)
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: !isExpoGo, // Native alert only in dev build
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: !isExpoGo,
+        shouldShowList: true,
+    }),
+});
 
 /**
  * Custom hook for managing push notifications
+ * @param router - Expo Router instance for notification-tap navigation
  * Note: Push notifications require a development build and won't work in Expo Go
  */
-export const usePushNotifications = () => {
+export const usePushNotifications = (router?: Router) => {
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
     const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
     const notificationListener = useRef<Notifications.EventSubscription | undefined>(undefined);
@@ -35,17 +36,27 @@ export const usePushNotifications = () => {
         // Skip push notification setup in Expo Go
         if (isExpoGo) {
             console.log('⚠️ Push notifications are not available in Expo Go. Build a development build to enable push notifications.');
-            return;
-        }
+        } else {
+            // Register for push notifications
+            registerForPushNotificationsAsync().then(async token => {
+                if (token) {
+                    setExpoPushToken(token);
+                    // Register token with backend
+                    await registerTokenWithBackend(token);
+                }
+            });
 
-        // Register for push notifications
-        registerForPushNotificationsAsync().then(async token => {
-            if (token) {
-                setExpoPushToken(token);
-                // Register token with backend
-                await registerTokenWithBackend(token);
+            // Create Android notification channel
+            if (Platform.OS === 'android') {
+                Notifications.setNotificationChannelAsync('default', {
+                    name: 'Thoughts Notifications',
+                    importance: Notifications.AndroidImportance.MAX,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: '#458FD0',
+                    sound: 'default',
+                });
             }
-        });
+        }
 
         // Listen for notifications received while app is foregrounded
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
@@ -53,29 +64,17 @@ export const usePushNotifications = () => {
             console.log('Notification received in foreground:', notification);
         });
 
-        // Listen for notification taps
+        // Listen for notification taps (works in both Expo Go and dev builds for tap handling)
         responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
             console.log('Notification tapped:', response);
-            handleNotificationResponse(response);
+            if (router) {
+                handleNotificationResponse(response, router);
+            }
         });
 
-        // Create Android notification channel
-        if (Platform.OS === 'android') {
-            Notifications.setNotificationChannelAsync('default', {
-                name: 'default',
-                importance: Notifications.AndroidImportance.MAX,
-                vibrationPattern: [0, 250, 250, 250],
-                lightColor: '#458FD0',
-            });
-        }
-
         return () => {
-            if (notificationListener.current) {
-                notificationListener.current.remove();
-            }
-            if (responseListener.current) {
-                responseListener.current.remove();
-            }
+            notificationListener.current?.remove();
+            responseListener.current?.remove();
         };
     }, []);
 
@@ -164,21 +163,37 @@ async function registerTokenWithBackend(pushToken: string): Promise<void> {
 }
 
 /**
- * Handle notification tap to navigate to relevant screen
+ * Handle notification tap to navigate to the relevant screen
  */
-function handleNotificationResponse(response: Notifications.NotificationResponse): void {
-    const data = response.notification.request.content.data;
+function handleNotificationResponse(response: Notifications.NotificationResponse, router: Router): void {
+    const data = response.notification.request.content.data as {
+        type?: string;
+        pollId?: string;
+        senderId?: string;
+    };
 
-    // TODO: Add navigation logic based on notification type
-    // For now, just log the data
-    console.log('Notification data:', data);
+    console.log('Notification tapped, navigating for type:', data?.type);
 
-    // Example navigation logic (you'll need to import and use router):
-    // if (data.type === 'poll_like' || data.type === 'poll_vote') {
-    //   router.push(`/poll/${data.pollId}`);
-    // } else if (data.type === 'follow_request' || data.type === 'follow') {
-    //   router.push('/notifications');
-    // }
+    try {
+        if (data?.type === 'poll_like' || data?.type === 'poll_vote') {
+            if (data.pollId) {
+                router.push(`/poll/${data.pollId}` as any);
+            } else {
+                router.push('/(tabs)/notifications' as any);
+            }
+        } else if (
+            data?.type === 'follow_request' ||
+            data?.type === 'follow' ||
+            data?.type === 'follow_accepted'
+        ) {
+            router.push('/(tabs)/notifications' as any);
+        } else {
+            // Default: go to notifications tab
+            router.push('/(tabs)/notifications' as any);
+        }
+    } catch (error) {
+        console.error('Navigation error on notification tap:', error);
+    }
 }
 
 /**

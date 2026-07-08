@@ -245,12 +245,13 @@ const followUser = async (req, res, next) => {
             try {
                 await sendPushNotification(
                     userToFollow._id,
-                    'Follow Request',
-                    `${currentUser.username} wants to follow you`,
+                    'New Follow Request 👋',
+                    `${currentUser.fullName || currentUser.username} wants to follow you`,
                     {
                         type: 'follow_request',
                         followRequestId: followRequest._id.toString(),
                         senderId: currentUser._id.toString(),
+                        avatar: getFullImageUrl(currentUser.profilePicture),
                     }
                 );
             } catch (error) {
@@ -301,11 +302,12 @@ const followUser = async (req, res, next) => {
         try {
             await sendPushNotification(
                 userToFollow._id,
-                'New Follower',
-                `${currentUser.username} started following you`,
+                'New Follower 🎉',
+                `${currentUser.fullName || currentUser.username} started following you`,
                 {
                     type: 'follow',
                     senderId: currentUser._id.toString(),
+                    avatar: getFullImageUrl(currentUser.profilePicture),
                 }
             );
         } catch (error) {
@@ -497,6 +499,12 @@ const searchUsers = async (req, res, next) => {
 
         // Get follow status for each user
         const currentUser = await User.findById(req.user._id);
+
+        // Guard: if currentUser not found (e.g. stale token), return results without follow status
+        const followingIds = currentUser
+            ? currentUser.following.map(id => id.toString())
+            : [];
+
         const pendingRequests = await FollowRequest.find({
             senderId: req.user._id,
             status: 'pending',
@@ -509,7 +517,8 @@ const searchUsers = async (req, res, next) => {
             username: user.username,
             profilePicture: getFullImageUrl(user.profilePicture),
             isPrivate: user.isPrivate,
-            isFollowing: currentUser.following.includes(user._id),
+            // Use .toString() comparison — ObjectId .includes() uses reference equality and always returns false
+            isFollowing: followingIds.includes(user._id.toString()),
             hasPendingRequest: pendingRecipientIds.includes(user._id.toString()),
         }));
 
@@ -535,7 +544,7 @@ const getSuggestedUsers = async (req, res, next) => {
     try {
         // Get current user's following list
         const currentUser = await User.findById(req.user._id);
-        const followingIds = currentUser.following.map(id => id.toString());
+        const followingList = currentUser ? currentUser.following : [];
 
         // Get random users using MongoDB aggregation, excluding current user and already followed users
         const randomUsers = await User.aggregate([
@@ -543,7 +552,7 @@ const getSuggestedUsers = async (req, res, next) => {
                 $match: {
                     _id: {
                         $ne: req.user._id,
-                        $nin: currentUser.following // Exclude users already being followed
+                        $nin: followingList // Exclude users already being followed
                     }
                 }
             },
@@ -584,6 +593,7 @@ const getSuggestedUsers = async (req, res, next) => {
         next(error);
     }
 };
+
 
 // @desc    Send follow request to private profile
 // @route   POST /api/users/follow-request/:userId

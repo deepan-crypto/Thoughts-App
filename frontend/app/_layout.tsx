@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -6,17 +6,25 @@ import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, P
 import { OpenSans_300Light, OpenSans_400Regular, OpenSans_600SemiBold } from '@expo-google-fonts/open-sans';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
 import { usePushNotifications } from '@/utils/usePushNotifications';
 import { ToastProvider } from '@/utils/ToastContext';
+import { NotificationBanner, NotificationBannerData } from '@/components/NotificationBanner';
+import { useSocket } from '@/utils/useSocket';
+import { getProfileImageUrl } from '@/utils/profileImageUtils';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useFrameworkReady();
 
-  usePushNotifications();
-
   const router = useRouter();
+
+  // Pass router so notification taps can navigate
+  usePushNotifications(router);
+
+  // In-app foreground notification banner state
+  const [bannerData, setBannerData] = useState<NotificationBannerData | null>(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -70,13 +78,76 @@ export default function RootLayout() {
     }, 300);
   };
 
+  // Show in-app notification banner helper
+  const showBanner = useCallback((title: string, body: string, avatar?: string, onPress?: () => void) => {
+    setBannerData({ title, body, avatar: avatar ? getProfileImageUrl(avatar) : undefined, onPress });
+  }, []);
+
+  // Listen for foreground push notifications → show in-app banner
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      const { title, body, data } = notification.request.content;
+      if (!title && !body) return;
+
+      const notifData = data as { type?: string; pollId?: string; avatar?: string };
+
+      showBanner(
+        title ?? 'Thoughts',
+        body ?? '',
+        notifData?.avatar,
+        () => {
+          if (notifData?.type === 'poll_like' || notifData?.type === 'poll_vote') {
+            if (notifData.pollId) router.push(`/poll/${notifData.pollId}` as any);
+            else router.push('/(tabs)/notifications' as any);
+          } else {
+            router.push('/(tabs)/notifications' as any);
+          }
+        }
+      );
+    });
+
+    return () => subscription.remove();
+  }, [showBanner]);
+
+  // Listen for real-time socket notifications → show in-app banner
+  // (Socket fires faster than push notifications when app is open)
+  const { socket } = useSocket();
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSocketNotification = (notification: any) => {
+      const senderName = notification?.user?.name || 'Someone';
+      const action = notification?.action || 'sent you a notification';
+      const avatar = notification?.user?.avatar;
+      const type = notification?.type;
+      const pollId = notification?.pollId;
+
+      showBanner(
+        'Thoughts',
+        `${senderName} ${action}`,
+        avatar,
+        () => {
+          if (type === 'like' || type === 'vote') {
+            if (pollId) router.push(`/poll/${pollId}` as any);
+            else router.push('/(tabs)/notifications' as any);
+          } else {
+            router.push('/(tabs)/notifications' as any);
+          }
+        }
+      );
+    };
+
+    socket.on('new_notification', handleSocketNotification);
+    return () => { socket.off('new_notification', handleSocketNotification); };
+  }, [socket, showBanner]);
+
+  // Deep link & URL handling
   useEffect(() => {
     // Handle URL that opened the app (cold start)
     Linking.getInitialURL().then((url) => {
       if (url) {
         const route = parseDeepLink(url);
         if (route) {
-          // Wait for navigation to be ready, then navigate with proper back stack
           setTimeout(() => navigateToDeepLinkColdStart(route), 1000);
         }
       }
@@ -120,7 +191,12 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
+
+      {/* Instagram-style foreground notification banner */}
+      <NotificationBanner
+        data={bannerData}
+        onDismiss={() => setBannerData(null)}
+      />
     </ToastProvider>
   );
 }
-

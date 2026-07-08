@@ -403,12 +403,13 @@ const votePoll = async (req, res, next) => {
             try {
                 await sendPushNotification(
                     poll.userId,
-                    'New Vote',
-                    `${req.user.username} voted on your poll`,
+                    'New Vote 🗳️',
+                    `${req.user.fullName || req.user.username} voted on your poll`,
                     {
                         type: 'poll_vote',
                         pollId: poll._id.toString(),
                         senderId: req.user._id.toString(),
+                        avatar: getFullImageUrl(req.user.profilePicture),
                     }
                 );
             } catch (error) {
@@ -509,12 +510,13 @@ const likePoll = async (req, res, next) => {
             try {
                 await sendPushNotification(
                     poll.userId,
-                    'New Like',
-                    `${req.user.username} liked your poll`,
+                    'New Like ❤️',
+                    `${req.user.fullName || req.user.username} liked your poll`,
                     {
                         type: 'poll_like',
                         pollId: poll._id.toString(),
                         senderId: req.user._id.toString(),
+                        avatar: getFullImageUrl(req.user.profilePicture),
                     }
                 );
             } catch (error) {

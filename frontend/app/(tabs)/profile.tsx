@@ -65,17 +65,43 @@ export default function ProfileScreen() {
     }
   };
 
-  // Load user data from storage
+  // Load user data from storage (and refresh from server to avoid stale IDs)
   const loadUserData = useCallback(async () => {
     try {
+      const token = await authStorage.getToken();
+
+      // Always try to fetch fresh user data from the server (avoids stale IDs in SecureStore)
+      if (token) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+              await authStorage.setUser(data.user);
+              setUser(data.user);
+              const freshId = data.user.id || data.user._id;
+              fetchUserPolls(freshId);
+              fetchVotedPolls(freshId);
+              fetchUserStats(freshId);
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to refresh user from server, falling back to cache:', err);
+        }
+      }
+
+      // Fallback: use cached user data
       const userData = await authStorage.getUser();
-      console.log('Loaded user data:', userData);
+      console.log('Loaded user data (from cache):', userData);
       if (userData) {
         setUser(userData);
-        // Fetch user's polls, voted polls, and stats
-        fetchUserPolls(userData.id);
-        fetchVotedPolls(userData.id);
-        fetchUserStats(userData.id);
+        const userId = userData.id || userData._id;
+        fetchUserPolls(userId);
+        fetchVotedPolls(userId);
+        fetchUserStats(userId);
       }
     } catch (error) {
       console.error('Error loading user data:', error);

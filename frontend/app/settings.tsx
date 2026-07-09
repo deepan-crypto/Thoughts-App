@@ -347,7 +347,7 @@ export default function SettingsScreen() {
                                     value={newPassword}
                                     onChangeText={setNewPassword}
                                     secureTextEntry={!showNewPassword}
-                                    placeholder="Enter new password (min 6 characters)"
+                                    placeholder="Enter new password (min 6)"
                                     placeholderTextColor="#999"
                                 />
                                 <TouchableOpacity

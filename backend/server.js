@@ -369,22 +369,6 @@ app.get('/reset-password', (req, res) => {
     </div>
 
     <script>
-        var isAndroid = /android/i.test(navigator.userAgent);
-        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-        var btn = document.getElementById('openBtn');
-        var divider = document.getElementById('divider');
-
-        // Show "Open in App" button only on mobile — NO auto-redirect
-        if (isAndroid) {
-            btn.style.display = 'block';
-            divider.style.display = 'block';
-            btn.href = "${intentUri}";
-        } else if (isIOS) {
-            btn.style.display = 'block';
-            divider.style.display = 'block';
-            btn.href = "${customScheme}";
-        }
-
         document.getElementById('resetForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var newPassword = document.getElementById('newPassword').value;
@@ -417,8 +401,6 @@ app.get('/reset-password', (req, res) => {
                 if (res.ok) {
                     document.getElementById('resetForm').style.display = 'none';
                     document.getElementById('successMsg').style.display = 'block';
-                    divider.style.display = 'none';
-                    btn.style.display = 'none';
                 } else {
                     errorMsg.style.display = 'block';
                     errorMsg.textContent = res.data.message || 'Failed to reset password.';

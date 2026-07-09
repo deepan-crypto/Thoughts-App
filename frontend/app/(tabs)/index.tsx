@@ -92,30 +92,32 @@ export default function HomeScreen() {
 
   // Handle hardware back button - exit app instead of navigating back
   const backPressCount = useRef(0);
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      // Increment press count
-      backPressCount.current += 1;
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        // Increment press count
+        backPressCount.current += 1;
 
-      if (backPressCount.current === 1) {
-        // First press - show message
-        Alert.alert('Exit App', 'Press back again to exit', [{ text: 'OK' }]);
+        if (backPressCount.current === 1) {
+          // First press - show message
+          Alert.alert('Exit App', 'Press back again to exit', [{ text: 'OK' }]);
 
-        // Reset counter after 2 seconds
-        setTimeout(() => {
-          backPressCount.current = 0;
-        }, 2000);
+          // Reset counter after 2 seconds
+          setTimeout(() => {
+            backPressCount.current = 0;
+          }, 2000);
 
-        return true; // Prevent default back behavior
-      } else {
-        // Second press within 2 seconds - exit app
-        BackHandler.exitApp();
-        return false;
-      }
-    });
+          return true; // Prevent default back behavior
+        } else {
+          // Second press within 2 seconds - exit app
+          BackHandler.exitApp();
+          return false;
+        }
+      });
 
-    return () => backHandler.remove();
-  }, []);
+      return () => backHandler.remove();
+    }, [])
+  );
 
   const fetchPolls = async () => {
     console.log('===== FETCHPOLLS FUNCTION CALLED =====');

@@ -391,6 +391,18 @@ export default function SettingsScreen() {
                         {/* Modal Buttons */}
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
+                                style={styles.modalConfirmButton}
+                                onPress={handleChangePassword}
+                                disabled={changingPassword}
+                            >
+                                {changingPassword ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                ) : (
+                                    <Text style={styles.modalConfirmButtonText}>Change Password</Text>
+                                )}
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
                                 style={styles.modalCancelButton}
                                 onPress={() => {
                                     setShowPasswordModal(false);
@@ -401,17 +413,6 @@ export default function SettingsScreen() {
                                 disabled={changingPassword}
                             >
                                 <Text style={styles.modalCancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.modalConfirmButton}
-                                onPress={handleChangePassword}
-                                disabled={changingPassword}
-                            >
-                                {changingPassword ? (
-                                    <ActivityIndicator size="small" color="#FFFFFF" />
-                                ) : (
-                                    <Text style={styles.modalConfirmButtonText}>Change Password</Text>
-                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -580,27 +581,25 @@ const styles = StyleSheet.create({
         padding: 12,
     },
     modalButtons: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         gap: 12,
-        marginTop: 8,
+        marginTop: 16,
     },
     modalCancelButton: {
-        flex: 1,
-        backgroundColor: '#E0E0E0',
-        borderRadius: 8,
-        padding: 14,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 12,
+        padding: 16,
         alignItems: 'center',
     },
     modalCancelButtonText: {
-        color: '#101720',
+        color: '#6C7278',
         fontSize: 16,
         fontWeight: '600',
     },
     modalConfirmButton: {
-        flex: 1,
         backgroundColor: '#458FD0',
-        borderRadius: 8,
-        padding: 14,
+        borderRadius: 12,
+        padding: 16,
         alignItems: 'center',
     },
     modalConfirmButtonText: {

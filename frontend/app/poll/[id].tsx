@@ -10,7 +10,7 @@ import {
     BackHandler,
     Alert,
 } from 'react-native';
-import { useLocalSearchParams, router, useNavigation } from 'expo-router';
+import { useLocalSearchParams, router, useNavigation, useFocusEffect } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import API_BASE_URL from '@/config/api';
 import { authStorage } from '@/utils/authStorage';
@@ -59,13 +59,15 @@ export default function PollDetailScreen() {
     }, [navigation]);
 
     // Handle Android hardware back button
-    useEffect(() => {
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-            handleBack();
-            return true; // Prevent default (exit app) behavior
-        });
-        return () => backHandler.remove();
-    }, [handleBack]);
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+                handleBack();
+                return true; // Prevent default (exit app) behavior
+            });
+            return () => backHandler.remove();
+        }, [handleBack])
+    );
 
     useEffect(() => {
         const fetchUser = async () => {

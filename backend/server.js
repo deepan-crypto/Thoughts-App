@@ -38,6 +38,9 @@ const emailRoutes = require('./routes/email');
 // Initialize express app
 const app = express();
 
+// Trust first proxy (nginx) — required for express-rate-limit behind reverse proxy
+app.set('trust proxy', 1);
+
 // Create HTTP server for Socket.IO
 const server = http.createServer(app);
 

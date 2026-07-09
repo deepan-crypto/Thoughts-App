@@ -14,7 +14,7 @@ const ASSETS_DIR = path.join(__dirname, 'assets', 'images');
 // SVG with white background (no alpha - required for iOS App Store)
 const svgAppIcon = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1024" height="1024" fill="white"/>
-  <g transform="translate(212.5, 117) scale(8.2)">
+  <g transform="translate(274, 191) scale(6.8)">
     <path d="M42.3355 91.4999C43.8355 72.4999 45.8355 40.5 38.8355 33.5C31.8355 26.5 11.1273 41.1744 4.33557 35C-1.16442 30 10.3202 3.00001 38.8355 3C60.8356 2.99999 69.8355 20 69.8355 32C69.8355 49.2627 56.8355 59 44.0874 61C19.8355 64.8048 13.8355 48 12.8355 46"
       stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/>
   </g>
@@ -28,7 +28,7 @@ const svgAppIcon = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill
 
 // SVG for Android adaptive icon - transparent bg, logo centered in 1536x1536 safe zone
 const svgAdaptiveIcon = `<svg width="1536" height="1536" viewBox="0 0 1536 1536" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(468.5, 429) scale(8.2)">
+  <g transform="translate(418, 295.5) scale(10)">
     <path d="M42.3355 91.4999C43.8355 72.4999 45.8355 40.5 38.8355 33.5C31.8355 26.5 11.1273 41.1744 4.33557 35C-1.16442 30 10.3202 3.00001 38.8355 3C60.8356 2.99999 69.8355 20 69.8355 32C69.8355 49.2627 56.8355 59 44.0874 61C19.8355 64.8048 13.8355 48 12.8355 46"
       stroke="url(#g2)" stroke-width="6" stroke-linecap="round"/>
   </g>

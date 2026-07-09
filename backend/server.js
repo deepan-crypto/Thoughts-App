@@ -290,8 +290,11 @@ app.get('/reset-password', (req, res) => {
         return res.status(400).send('Invalid or missing reset token.');
     }
 
+    // Android intent: must use scheme=https + host=thoughts.co.in to match app.json intentFilters
+    const pageUrl = `https://thoughts.co.in/reset-password?token=${token}`;
+    const intentUri = `intent://thoughts.co.in/reset-password?token=${token}#Intent;scheme=https;package=com.deepangokul.thoughts;S.browser_fallback_url=${encodeURIComponent(pageUrl)};end`;
+    // iOS custom scheme
     const customScheme = `thoughts://reset-password?token=${token}`;
-    const intentUri = `intent://reset-password?token=${token}#Intent;scheme=thoughts;package=com.deepangokul.thoughts;end`;
 
     res.send(`<!DOCTYPE html>
 <html>
@@ -315,7 +318,7 @@ app.get('/reset-password', (req, res) => {
         .label { display: block; font-size: 14px; color: #6e7278; margin-bottom: 8px; font-weight: 500; }
         .input { 
             width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid #e0e5eb; 
-            font-size: 15px; outline: none; transition: border-color 0.2s; 
+            font-size: 15px; outline: none; transition: border-color 0.2s; box-sizing: border-box;
         }
         .input:focus { border-color: #308fdb; }
         .btn { 
@@ -330,12 +333,12 @@ app.get('/reset-password', (req, res) => {
             border-radius: 8px; margin-bottom: 24px; font-weight: 500; text-align: center; display: none; 
         }
         .open-app-btn {
-            display: block; width: 100%; background: #fff; color: #539cdc;
+            display: none; width: 100%; background: #fff; color: #539cdc;
             padding: 14px; border-radius: 10px; border: 2px solid #539cdc; font-weight: 600;
             font-size: 16px; cursor: pointer; margin-top: 16px; text-align: center; text-decoration: none;
         }
         .divider {
-            margin: 24px 0; text-align: center; position: relative;
+            display: none; margin: 24px 0; text-align: center; position: relative;
         }
         .divider::before {
             content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: #e0e5eb; z-index: 1;
@@ -364,25 +367,25 @@ app.get('/reset-password', (req, res) => {
             <button type="submit" id="submitBtn" class="btn">Update Password</button>
         </form>
 
-        <div class="divider"><span>OR</span></div>
-        <a id="openBtn" class="open-app-btn" href="#">Open in App</a>
+        <div id="divider" class="divider"><span>OR</span></div>
+        <a id="openBtn" class="open-app-btn" href="#">Open in Thoughts App</a>
     </div>
 
     <script>
         var isAndroid = /android/i.test(navigator.userAgent);
         var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
         var btn = document.getElementById('openBtn');
+        var divider = document.getElementById('divider');
 
+        // Show "Open in App" button only on mobile — NO auto-redirect
         if (isAndroid) {
+            btn.style.display = 'block';
+            divider.style.display = 'block';
             btn.href = "${intentUri}";
-            // Try to auto-open if on mobile
-            setTimeout(function() { window.location.href = "${intentUri}"; }, 300);
         } else if (isIOS) {
+            btn.style.display = 'block';
+            divider.style.display = 'block';
             btn.href = "${customScheme}";
-            setTimeout(function() { window.location.href = "${customScheme}"; }, 300);
-        } else {
-            btn.style.display = 'none';
-            document.querySelector('.divider').style.display = 'none';
         }
 
         document.getElementById('resetForm').addEventListener('submit', function(e) {
@@ -412,12 +415,12 @@ app.get('/reset-password', (req, res) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: "${token}", newPassword: newPassword })
             })
-            .then(res => res.json().then(data => ({ ok: res.ok, data })))
-            .then(res => {
+            .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+            .then(function(res) {
                 if (res.ok) {
                     document.getElementById('resetForm').style.display = 'none';
                     document.getElementById('successMsg').style.display = 'block';
-                    document.querySelector('.divider').style.display = 'none';
+                    divider.style.display = 'none';
                     btn.style.display = 'none';
                 } else {
                     errorMsg.style.display = 'block';
@@ -426,7 +429,7 @@ app.get('/reset-password', (req, res) => {
                     submitBtn.textContent = 'Update Password';
                 }
             })
-            .catch(err => {
+            .catch(function(err) {
                 errorMsg.style.display = 'block';
                 errorMsg.textContent = 'Network error. Please try again.';
                 submitBtn.disabled = false;

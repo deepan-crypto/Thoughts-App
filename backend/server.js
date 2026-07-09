@@ -280,6 +280,161 @@ app.get('/profile/:username', (req, res) => {
 </html>`);
 });
 
+// Web fallback and deep link for reset password
+app.get('/reset-password', (req, res) => {
+    const token = req.query.token;
+    if (!token) {
+        return res.status(400).send('Invalid or missing reset token.');
+    }
+
+    const customScheme = `thoughts://reset-password?token=${token}`;
+    const intentUri = `intent://reset-password?token=${token}#Intent;scheme=thoughts;package=com.deepangokul.thoughts;end`;
+
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thoughts - Reset Password</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(180deg, #1ce3d3 0%, #308fdb 100%); 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+        }
+        .card { 
+            background: white; border-radius: 16px; padding: 40px 32px; 
+            max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.1); 
+        }
+        .title { font-size: 24px; font-weight: 800; color: #13151c; margin-bottom: 32px; text-align: center; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .label { display: block; font-size: 14px; color: #6e7278; margin-bottom: 8px; font-weight: 500; }
+        .input { 
+            width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid #e0e5eb; 
+            font-size: 15px; outline: none; transition: border-color 0.2s; 
+        }
+        .input:focus { border-color: #308fdb; }
+        .btn { 
+            display: block; width: 100%; background: #539cdc; color: white; 
+            padding: 16px; border-radius: 10px; border: none; font-weight: 600; 
+            font-size: 16px; cursor: pointer; margin-top: 12px; 
+        }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .error { color: #d93025; font-size: 14px; text-align: center; margin-bottom: 20px; display: none; }
+        .success { 
+            background: #e6f4ea; color: #1e8e3e; padding: 16px; 
+            border-radius: 8px; margin-bottom: 24px; font-weight: 500; text-align: center; display: none; 
+        }
+        .open-app-btn {
+            display: block; width: 100%; background: #fff; color: #539cdc;
+            padding: 14px; border-radius: 10px; border: 2px solid #539cdc; font-weight: 600;
+            font-size: 16px; cursor: pointer; margin-top: 16px; text-align: center; text-decoration: none;
+        }
+        .divider {
+            margin: 24px 0; text-align: center; position: relative;
+        }
+        .divider::before {
+            content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: #e0e5eb; z-index: 1;
+        }
+        .divider span {
+            background: white; padding: 0 16px; color: #6e7278; font-size: 14px; position: relative; z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="title">Reset Account Password</h1>
+        
+        <div id="successMsg" class="success">Password reset successfully! You can now log in.</div>
+        <div id="errorMsg" class="error"></div>
+
+        <form id="resetForm">
+            <div class="form-group">
+                <label class="label">Create New Password</label>
+                <input type="password" id="newPassword" class="input" placeholder="Enter new password" required>
+            </div>
+            <div class="form-group">
+                <label class="label">Confirm Password</label>
+                <input type="password" id="confirmPassword" class="input" placeholder="Confirm password" required>
+            </div>
+            <button type="submit" id="submitBtn" class="btn">Update Password</button>
+        </form>
+
+        <div class="divider"><span>OR</span></div>
+        <a id="openBtn" class="open-app-btn" href="#">Open in App</a>
+    </div>
+
+    <script>
+        var isAndroid = /android/i.test(navigator.userAgent);
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        var btn = document.getElementById('openBtn');
+
+        if (isAndroid) {
+            btn.href = "${intentUri}";
+            // Try to auto-open if on mobile
+            setTimeout(function() { window.location.href = "${intentUri}"; }, 300);
+        } else if (isIOS) {
+            btn.href = "${customScheme}";
+            setTimeout(function() { window.location.href = "${customScheme}"; }, 300);
+        } else {
+            btn.style.display = 'none';
+            document.querySelector('.divider').style.display = 'none';
+        }
+
+        document.getElementById('resetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var newPassword = document.getElementById('newPassword').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+            var errorMsg = document.getElementById('errorMsg');
+            var submitBtn = document.getElementById('submitBtn');
+
+            if (newPassword.length < 6) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Password must be at least 6 characters.';
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Passwords do not match.';
+                return;
+            }
+
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+
+            fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: "${token}", newPassword: newPassword })
+            })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(res => {
+                if (res.ok) {
+                    document.getElementById('resetForm').style.display = 'none';
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.querySelector('.divider').style.display = 'none';
+                    btn.style.display = 'none';
+                } else {
+                    errorMsg.style.display = 'block';
+                    errorMsg.textContent = res.data.message || 'Failed to reset password.';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Update Password';
+                }
+            })
+            .catch(err => {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Network error. Please try again.';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Password';
+            });
+        });
+    </script>
+</body>
+</html>`);
+});
+
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({

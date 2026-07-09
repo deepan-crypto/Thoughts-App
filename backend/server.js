@@ -366,9 +366,6 @@ app.get('/reset-password', (req, res) => {
             </div>
             <button type="submit" id="submitBtn" class="btn">Update Password</button>
         </form>
-
-        <div id="divider" class="divider"><span>OR</span></div>
-        <a id="openBtn" class="open-app-btn" href="#">Open in Thoughts App</a>
     </div>
 
     <script>
